@@ -18,10 +18,15 @@ type mongoRepository struct {
 	timeout  time.Duration
 }
 
-func newMongoClient(mongoUrl string, mongoTimeout int) (*mongo.Client, error) {
+func newMongoClient(mongoUrl, username, password string, mongoTimeout int) (*mongo.Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mongoTimeout)*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoUrl))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoUrl).SetAuth(
+		options.Credential{
+			Username: username,
+			Password: password,
+		},
+	))
 
 	if err != nil {
 		return nil, err
@@ -35,13 +40,13 @@ func newMongoClient(mongoUrl string, mongoTimeout int) (*mongo.Client, error) {
 	return client, nil
 }
 
-func NewMongoRepository(mongoURL, mongoDB string, mongoTimeout int) (shortner.RedirectRepository, error) {
+func NewMongoRepository(mongoURL, mongoDB, username, password string, mongoTimeout int) (shortner.RedirectRepository, error) {
 	repo := &mongoRepository{
 		timeout:  time.Duration(mongoTimeout) * time.Second,
 		database: mongoDB,
 	}
 
-	client, err := newMongoClient(mongoURL, mongoTimeout)
+	client, err := newMongoClient(mongoURL, username, password, mongoTimeout)
 	if err != nil {
 		return nil, errors.Wrap(err, "repository.NewMongoRepository")
 	}

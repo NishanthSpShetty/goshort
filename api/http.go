@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"io/ioutil"
 
 	"github.com/go-chi/chi"
@@ -55,6 +56,8 @@ func (h handler) Get(responseWriter http.ResponseWriter, req *http.Request) {
 			return
 		}
 
+		fmt.Printf(" Error : %v\n", err)
+
 		http.Error(responseWriter, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -83,6 +86,7 @@ func (h handler) Post(responseWriter http.ResponseWriter, req *http.Request) {
 			http.Error(responseWriter, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
+		fmt.Printf(" Error : %v\n", err)
 		http.Error(responseWriter, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}

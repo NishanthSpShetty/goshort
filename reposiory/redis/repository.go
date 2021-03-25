@@ -31,14 +31,11 @@ func NewRedisRepository(redisUrl string) (shortner.RedirectRepository, error) {
 	repo := &redisRepository{}
 
 	client, err := newRedisClient(redisUrl)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "repository.NewRedisRepository")
-
 	}
 
 	repo.client = client
-
 	return repo, nil
 }
 

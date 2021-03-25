@@ -3,8 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -27,6 +30,19 @@ func main() {
 
 	r.Get("/{code}", handler.Get)
 	r.Post("/", handler.Post)
+
+	errs := make(chan error, 2)
+	go func() {
+		fmt.Println("listening on port :8080")
+		errs <- http.ListenAndServe(httpPort(), r)
+	}()
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, syscall.SIGINT)
+		errs <- fmt.Errorf("%s", <-c)
+	}()
+
+	fmt.Printf("Terminated %s", <-errs)
 }
 
 func chooseRepo() shortner.RedirectRepository {
@@ -42,9 +58,11 @@ func chooseRepo() shortner.RedirectRepository {
 	case "mongo":
 		mongoURL := os.Getenv("MONGO_URL")
 		mongoDB := os.Getenv("MONGO_DB")
+		mongoPassword := os.Getenv("MONGO_PASSWORD")
+		mongoUsername := os.Getenv("MONGO_USERNAME")
 		mongoTimeout, _ := strconv.Atoi(os.Getenv("MONGO_TIMEOUT"))
 
-		repo, err := mr.NewMongoRepository(mongoURL, mongoDB, mongoTimeout)
+		repo, err := mr.NewMongoRepository(mongoURL, mongoDB, mongoUsername, mongoPassword, mongoTimeout)
 		if err != nil {
 			log.Fatal(err)
 		}
